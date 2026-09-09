@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, Sparkles, Calendar, Compass, Loader2 } from 'lucide-react';
+import { GoogleGenAI } from '@google/genai';
 import { ChatMessage } from '../types';
 
 interface AIChatbotWidgetProps {
@@ -7,6 +8,108 @@ interface AIChatbotWidgetProps {
   onToggle: () => void;
   onOpenBooking: (pujaType?: string) => void;
   onOpenAstrologer: () => void;
+}
+
+// Generates dynamic, context-aware Vedic guidance if API key is not yet set in Vercel or offline
+function getIntelligentVedicGuidance(query: string): { reply: string; quickActions?: Array<{ label: string; actionType: 'book_puja' | 'open_astrologer'; payload?: string }> } {
+  const lower = query.toLowerCase();
+
+  if (lower.includes('muhurat') || lower.includes('time') || lower.includes('date') || lower.includes('auspicious') || lower.includes('tithi') || lower.includes('panchang')) {
+    return {
+      reply: 'Namaste! 🙏 In Vedic Panchang, an auspicious Shubh Muhurat is calculated using 5 key elements (Tithi, Vara, Nakshatra, Yoga, and Karana) while strictly avoiding Rahu Kaal, Yamaganda, and Bhadra.\n\n• For Griha Pravesh & Weddings: Shukla Paksha with Pushya, Rohini, or Uttara Nakshatras are considered supreme.\n• For Hawan & Pujas: Abhijit Muhurat and Brahma Muhurat are highly propitious.\n\nYou can consult our Gurukul Jyotish Acharyas directly for personalized Muhurat calculated against your Janma Kundali.',
+      quickActions: [
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' },
+        { label: 'Book Shubh Puja', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' }
+      ]
+    };
+  }
+
+  if (lower.includes('samagri') || lower.includes('item') || lower.includes('list') || lower.includes('material') || lower.includes('kit')) {
+    return {
+      reply: 'Namaste! 🙏 Vedsetu delivers 100% sealed, lab-certified organic samagri kits directly with our Pandits:\n\n• Pure Desi Gir Cow Ghee (A2 Bilona)\n• Seasoned Mango Wood (Samidha) & Copper Havan Kund\n• Pure Bhimseni Kapur (Camphor) & Loban\n• Roli, Kumkum, Chandan, Haldi Ghat & Akshat (unbroken rice)\n• Supari, Clove, Green Cardamom, Betel Leaves\n• Sacred Panchamrit (Desi Milk, Curd, Honey, Sugar, Ghee)\n\nZero chemical adulteration or synthetic fragrances.',
+      quickActions: [
+        { label: 'Book Puja with Kit', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('griha pravesh') || lower.includes('house') || lower.includes('home') || lower.includes('flat') || lower.includes('shifting')) {
+    return {
+      reply: 'Namaste! 🙏 For Griha Pravesh & Vastu Shanti, authentic Vedic Vidhi proceeds through 4 sacred stages:\n\n1. Dwar Puja & Auspicious Threshold Crossing (with Cow/Calf or Kalash)\n2. Sacred Milk Boiling Ceremony (Ksheera Vidhi - overflowing brings abundance)\n3. Gauri-Ganesh Sthapana & Navagraha Shanti Homam\n4. Vastu Purusha Aradhana & Havan to cleanse all negative energies\n\nOur Gurukul Acharyas arrive with complete organic samagri and perform the rituals with correct Vedic pronunciation.',
+      quickActions: [
+        { label: 'Book Griha Pravesh', actionType: 'book_puja', payload: 'Griha Pravesh & Vastu Shanti' },
+        { label: 'Check Vastu Muhurat (₹60)', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('rudra') || lower.includes('shiva') || lower.includes('mahadev') || lower.includes('abhishek') || lower.includes('bholenath')) {
+    return {
+      reply: 'Namaste! 🙏 Om Namah Shivaya. Maha Rudrabhishek is the supreme Vedic ritual for health, planetary mitigation, and peace. Our Acharyas recite Sri Rudram (Namakam and Chamakam):\n\n• Continuous Abhishek with Gangajal, Cow Milk, Honey, Sugarcane juice, and Panchamrit\n• Archana with fresh unbroken Bilva Patra (Bel leaves), Bhasma, and Dhatura\n• Maha Mrityunjaya Japa & Aarti with digital sound chanting in our Live Procedure Tracker.',
+      quickActions: [
+        { label: 'Book Rudrabhishek', actionType: 'book_puja', payload: 'Maha Rudrabhishek' },
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('satyanarayan') || lower.includes('katha') || lower.includes('purnima') || lower.includes('vrat')) {
+    return {
+      reply: 'Namaste! 🙏 Shri Satyanarayan Mahapuja is performed for family harmony, new ventures, and Purnima blessings. The ritual comprises:\n\n• Kalash Sthapana & Navagraha Invocation\n• Recitation of 5 sacred Adhyayas from the Reva Khanda of Skanda Purana\n• Authentic Panchamrit snan and preparation of Sheera (Panjiri) Prasad\n• Maha Aarti and Sankalpa for the entire family.',
+      quickActions: [
+        { label: 'Book Satyanarayan Katha', actionType: 'book_puja', payload: 'Satyanarayan Katha' },
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('price') || lower.includes('cost') || lower.includes('fee') || lower.includes('charge') || lower.includes('dakshina') || lower.includes('rate')) {
+    return {
+      reply: 'Namaste! 🙏 Vedsetu guarantees 100% price transparency with zero hidden dakshina requests:\n\n• Verified Gurukul Acharya pujas start from ₹2,100 (inclusive of complete ritual vidhi)\n• All-inclusive packages include 100% pure organic samagri delivered at your doorstep\n• Ethical Vedic Astrology Consultations are a flat ₹60 for 15 minutes\n\nAll payments are settled securely upfront with zero awkward last-minute demands.',
+      quickActions: [
+        { label: 'Explore Puja Packages', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
+        { label: 'Astrology at ₹60', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('astro') || lower.includes('kundali') || lower.includes('horoscope') || lower.includes('marriage') || lower.includes('gun') || lower.includes('career') || lower.includes('dosha') || lower.includes('kaal sarp') || lower.includes('mangal') || lower.includes('gemstone')) {
+    return {
+      reply: 'Namaste! 🙏 Vedsetu offers transparent, ethical Vedic Astrology consultations at a flat rate of ₹60 for 15 minutes.\n\nOur Jyotish Acharyas analyze your Janma Kundali, Mahadasha, and planetary transits (Gochar). We adhere to a strict ethical charter: 100% genuine shastra guidance, zero fearmongering, and zero pushy gemstone sales.',
+      quickActions: [
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' },
+        { label: 'Book Shanti Puja', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' }
+      ]
+    };
+  }
+
+  if (lower.includes('pandit') || lower.includes('acharya') || lower.includes('gurukul') || lower.includes('who are') || lower.includes('verify')) {
+    return {
+      reply: 'Namaste! 🙏 Every Vedsetu Pandit is an authentic Gurukul-certified Acharya:\n\n• Rigorous formal training in Shukla Yajurveda, Rigveda, or Samaveda\n• Verified background, identity, and Gurukul credentials\n• Flawless Sanskrit pronunciation with proper svara and mudras\n• Accompanied by pure organic samagri and the real-time Vedsetu procedure tracker.',
+      quickActions: [
+        { label: 'Book Verified Pandit', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
+        { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
+      ]
+    };
+  }
+
+  if (lower.includes('audio') || lower.includes('mantra') || lower.includes('sound') || lower.includes('tracker') || lower.includes('procedure')) {
+    return {
+      reply: 'Namaste! 🙏 Our Interactive Procedure Tracker allows devotees to follow every step of their puja in real-time. It features authentic Vedic chanting audio (such as Ganapati Atharvashirsha and Jai Dev Jai Dev Ganesh Aarti), synchronized lyrics with Hindi & English meanings, and a digital bell!',
+      quickActions: [
+        { label: 'Book Puja with Tracker', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' }
+      ]
+    };
+  }
+
+  return {
+    reply: `Namaste! 🙏 I am your Vedsetu Spiritual AI Assistant. I can assist you with:\n\n• Calculating auspicious Shubh Muhurats for your sacred ceremonies\n• Providing complete 100% pure organic samagri checklists\n• Explaining the authentic Vedic Vidhi for Ganesh Puja, Griha Pravesh, Rudrabhishek, or Satyanarayan Katha\n• Connecting you with verified Gurukul Acharyas and ethical Astrologers (flat ₹60).`,
+    quickActions: [
+      { label: 'Book a Pandit', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
+      { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
+    ]
+  };
 }
 
 export const AIChatbotWidget: React.FC<AIChatbotWidgetProps> = ({
@@ -69,6 +172,9 @@ export const AIChatbotWidget: React.FC<AIChatbotWidgetProps> = ({
     setInputVal('');
     setIsLoading(true);
 
+    let answerReceived = false;
+
+    // 1. First attempt: call serverless / server route /api/chat
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -84,37 +190,86 @@ export const AIChatbotWidget: React.FC<AIChatbotWidgetProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && typeof data.reply === 'string' && data.reply.trim()) {
+          const aiMsg: ChatMessage = {
+            id: `ai-${Date.now()}`,
+            sender: 'ai',
+            text: data.reply,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            quickActions: data.quickActions && data.quickActions.length > 0 ? data.quickActions : undefined,
+          };
+          setMessages(prev => [...prev, aiMsg]);
+          answerReceived = true;
+        }
       }
+    } catch (serverErr) {
+      console.warn('/api/chat fetch encountered issue:', serverErr);
+    }
 
-      const data = await response.json();
+    // 2. Second attempt: if server route didn't return an answer, check if client has VITE_GEMINI_API_KEY
+    if (!answerReceived) {
+      const clientApiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
+      if (clientApiKey) {
+        try {
+          const ai = new GoogleGenAI({ apiKey: clientApiKey });
+          const candidateModels = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
+          let clientText = '';
 
-      const aiMsg: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: data.reply || 'Namaste! How else may I assist you with your rituals?',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        quickActions: data.quickActions && data.quickActions.length > 0 ? data.quickActions : undefined,
-      };
+          for (const model of candidateModels) {
+            try {
+              const res = await ai.models.generateContent({
+                model,
+                contents: [{ role: 'user', parts: [{ text }] }],
+                config: {
+                  systemInstruction: 'You are the authentic Vedsetu Spiritual AI Assistant for Vedsetu. Answer queries respectfully based on Hindu Vedic traditions, shubh muhurats, puja samagri, and ritual procedures with concise structured formatting.',
+                  temperature: 0.7,
+                },
+              });
+              if (res.text) {
+                clientText = res.text;
+                break;
+              }
+            } catch {
+              // Try next model
+            }
+          }
 
-      setMessages(prev => [...prev, aiMsg]);
-    } catch (err) {
-      console.warn('Using Vedic Assistant fallback response:', err);
+          if (clientText) {
+            const aiMsg: ChatMessage = {
+              id: `ai-${Date.now()}`,
+              sender: 'ai',
+              text: clientText,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              quickActions: [
+                { label: 'Book a Pandit Now', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
+                { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' },
+              ],
+            };
+            setMessages(prev => [...prev, aiMsg]);
+            answerReceived = true;
+          }
+        } catch (clientErr) {
+          console.warn('Client-side Gemini call encountered issue:', clientErr);
+        }
+      }
+    }
+
+    // 3. Third attempt: intelligent contextual Vedic knowledge engine
+    if (!answerReceived) {
+      const guidance = getIntelligentVedicGuidance(text);
       const fallbackAiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: 'Namaste! 🙏 Our Gurukul-certified Acharyas are available to guide this sacred ritual with authentic mantras and 100% pure organic samagri. You can book a verified Pandit or speak with our Jyotish Acharyas directly.',
+        text: guidance.reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        quickActions: [
-          { label: 'Book a Pandit Now', actionType: 'book_puja', payload: 'Ganesh Puja & Havan' },
-          { label: 'Consult Astrologer (₹60)', actionType: 'open_astrologer' }
-        ]
+        quickActions: guidance.quickActions,
       };
       setMessages(prev => [...prev, fallbackAiMsg]);
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {

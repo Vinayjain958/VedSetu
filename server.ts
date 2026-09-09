@@ -12,7 +12,7 @@ app.use(express.json());
 let aiClient: GoogleGenAI | null = null;
 
 function getGeminiClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY environment variable is missing.");
   }
@@ -31,9 +31,10 @@ function getGeminiClient(): GoogleGenAI {
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
+  const hasKey = Boolean(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY);
   res.json({
     status: "ok",
-    hasApiKey: Boolean(process.env.GEMINI_API_KEY),
+    hasApiKey: hasKey,
   });
 });
 
@@ -239,9 +240,20 @@ Guidelines:
     });
   } catch (error: unknown) {
     console.error("Gemini API Error in /api/chat:", error);
-    // Return a friendly Vedic response rather than a 500 error code
+    const { message } = req.body || {};
+    const lower = typeof message === "string" ? message.toLowerCase() : "";
+    let reply = "Namaste! 🙏 Our Gurukul-certified Acharyas are available to guide this sacred ritual with authentic mantras and 100% pure organic samagri.";
+    
+    if (lower.includes("muhurat") || lower.includes("time") || lower.includes("date")) {
+      reply = "Namaste! 🙏 For calculating an auspicious Shubh Muhurat for your sacred ceremony, our Gurukul-certified Pandits review Shukla Paksha, auspicious Tithis, and Janma Nakshatra while avoiding Rahu Kaal. You can schedule a consultation with our Jyotish Acharyas or book your puja directly.";
+    } else if (lower.includes("samagri") || lower.includes("items") || lower.includes("list")) {
+      reply = "Namaste! 🙏 Essential Vedic Puja Samagri includes:\n• Pure Cow Desi Ghee & Mango Samidha\n• Copper Havan Kund & Sruva spoon\n• Akshat (unbroken rice), Roli, Kumkum, Chandan\n• Pure Bhimseni Camphor, Dhoop, and Supari\n• Panchamrit ingredients and Haldi ghat.\n\nVedsetu delivers sealed 100% pure organic samagri kits directly with our verified Pandits.";
+    } else if (lower.includes("price") || lower.includes("cost") || lower.includes("fee") || lower.includes("rate") || lower.includes("dakshina")) {
+      reply = "Namaste! 🙏 Vedsetu maintains 100% price transparency:\n• Puja dakshina starts at ₹2,100 with verified Gurukul Pandits.\n• All samagri kits are 100% pure organic and sealed.\n• Virtual Astrologer consultations are a flat ₹60 for 15 minutes with zero hidden fees.";
+    }
+
     return res.json({
-      reply: "Namaste! 🙏 Our Gurukul-certified Acharyas are available to guide this sacred ritual with authentic mantras and 100% pure organic samagri. You can book a verified Pandit or speak with our Jyotish Acharyas directly.",
+      reply,
       quickActions: [
         { label: "Book a Pandit Now", actionType: "book_puja", payload: "Ganesh Puja & Havan" },
         { label: "Consult Astrologer (₹60)", actionType: "open_astrologer" }
