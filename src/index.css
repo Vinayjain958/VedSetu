@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+.font-spiritual {
+  font-family: 'Yatra One', cursive, serif;
+}
+
+.font-serif-title {
+  font-family: 'Rozha One', serif;
+}
+
+/* Custom smooth pulse animation for ritual tracker active state */
+@keyframes sacred-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(234, 88, 12, 0.4), 0 0 30px rgba(245, 158, 11, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(234, 88, 12, 0.7), 0 0 45px rgba(245, 158, 11, 0.4);
+  }
+}
+
+.sacred-pulse {
+  animation: sacred-glow 3s infinite ease-in-out;
+}

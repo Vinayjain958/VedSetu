@@ -1,0 +1,8 @@
+{
+  "name": "Vedsetu",
+  "description": "An on-demand platform for booking verified Pandits, consulting astrologers, and tracking spiritual rituals with real-time progress updates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
